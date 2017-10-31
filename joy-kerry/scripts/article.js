@@ -73,7 +73,7 @@ Article.fetchAll = () => {
         localStorage.eTag = xhr.getResponseHeader('etag');
         Article.loadAll(JSON.parse(localStorage.rawData));
         articleView.initIndexPage();
-        })
+      })
       .fail(function() { console.log('failed to load'); })
 
     // COMMENT: Discuss the sequence of execution in this 'else' conditional. Why are these functions executed in this order?
@@ -91,11 +91,11 @@ function checkUpdates() {
     {
       if (localStorage.eTag === xhr.getResponseHeader('ETag')) {
         console.log('Data the same.')
-      } else  {
+      } else {
         localStorage.clear();
         Article.fetchAll();
-        console.log('Data changed.')
-       }
+        console.log('Data changed.');
       }
+    }
   });
-};
+}
