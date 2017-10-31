@@ -90,8 +90,6 @@ function checkUpdates() {
     success: function(data, textStatus, xhr)
     {
       if (localStorage.eTag === xhr.getResponseHeader('ETag')) {
-        Article.loadAll(JSON.parse(localStorage.rawData));
-        articleView.initIndexPage();
         console.log('Data the same.')
       } else  {
         localStorage.clear();
