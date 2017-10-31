@@ -45,9 +45,9 @@ Article.fetchAll = () => {
   // REVIEW: What is this 'if' statement checking for? Where was the rawData set to local storage?
   if (localStorage.rawData) {
 
+
     // STRETCH GOAL. We added a publishedTime property to each new article generated from those point forward.
-    let currentTime = new Date().getTime();
-    window.setInterval('checkUpdates()', 10000);
+
 
     // REVIEW: When rawData is already in localStorage we can load it with the .loadAll function above and then render the index page (using the proper method on the articleView object).
 
@@ -56,9 +56,10 @@ Article.fetchAll = () => {
 
     //DONE: What method do we call to render the index page?
     articleView.initIndexPage();
+
     // COMMENT: How is this different from the way we rendered the index page previously? What the benefits of calling the method here?
     // Previously, we called the initIndexPage method on our index.html page. Now, we need to call Article.fetchAll() first to check if localStorage has the raw data so that the method doesn't load an empty page. If it doesn't, we need to cache the raw data into local storage.
-
+    window.setInterval('checkUpdates()', 10000);
 
   } else {
     // DONE: When we don't already have the rawData:
@@ -67,9 +68,12 @@ Article.fetchAll = () => {
     // - we then need to load all the data into Article.all with the .loadAll function above
     // - then we can render the index page
     $.getJSON('../data/hackeripsum.json')
-      .done(function(json) {
+      .done(function(json, textStatus, xhr) {
         localStorage.rawData = JSON.stringify(json);
-        console.log('localStorage data stored' , localStorage.rawData)})
+        localStorage.eTag = xhr.getResponseHeader('etag');
+        Article.loadAll(JSON.parse(localStorage.rawData));
+        articleView.initIndexPage();
+        })
       .fail(function() { console.log('failed to load'); })
 
     // COMMENT: Discuss the sequence of execution in this 'else' conditional. Why are these functions executed in this order?
@@ -78,18 +82,22 @@ Article.fetchAll = () => {
 }
 
 function checkUpdates() {
-  let isUpdated = false;
-  $.ajax('../data/hackeripsum.json', {
+  $.ajax({
     type: 'HEAD',
-    success: function(response, status, xhr) {
-      console.log(xhr);
-      if (isUpdated === false) {
-        isUpdated = true;
-        return;
-      }
-      if (Article.all[0].publishedTime && Article.all[0].publishedTime > currentTime) {
+    url: '../data/hackeripsum.json',
+    ifModified: true,
+    dataType: 'json',
+    success: function(data, textStatus, xhr)
+    {
+      if (localStorage.eTag === xhr.getResponseHeader('ETag')) {
+        Article.loadAll(JSON.parse(localStorage.rawData));
+        articleView.initIndexPage();
+        console.log('Data the same.')
+      } else  {
         localStorage.clear();
+        Article.fetchAll();
+        console.log('Data changed.')
+       }
       }
-    }
   });
-}
+};
